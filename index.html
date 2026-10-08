@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>繪圖快速指令大全</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <header>
+        <div class="header-content">
+            <h1><i class="fa-solid fa-palette"></i> 繪圖快速指令大全</h1>
+            <p>探索並複製各種強大的 AI 繪圖指令，激發你的創作靈感！</p>
+            <div class="search-bar">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchInput" placeholder="搜尋指令或提示詞 (例如：anime, 去背, 風格)...">
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="grid-container" id="cardsContainer">
+            <!-- Cards will be injected by JavaScript -->
+        </div>
+    </main>
+
+    <!-- Toast Notification for Copy -->
+    <div id="toast" class="toast">已複製到剪貼簿！</div>
+
+    <!-- Audio for interaction -->
+    <audio id="clickSound" src="https://actions.google.com/sounds/v1/ui/button_click.ogg" preload="auto"></audio>
+    <audio id="successSound" src="https://actions.google.com/sounds/v1/ui/task_completed_2.ogg" preload="auto"></audio>
+
+    <script>
+        const commandsData = [
+            {"command": "/headshot", "description": "生成專業大頭照。人物置中，從肩膀以上取景，背景乾淨，光線柔和，可用於履歷、名片或社群頭像。", "img_prompt": "professional headshot of a smiling person, clean background"},
+            {"command": "/droneview", "description": "改成空拍視角。以無人機高空俯瞰的角度呈現場景，適合表現建築、地景、城市或活動場地的整體配置。", "img_prompt": "aerial drone view of a modern city landscape"},
+            {"command": "/lifestyle", "description": "生成生活情境照。把人物或商品放進自然的日常場景，例如居家、咖啡廳或戶外，常用於商品行銷和社群貼文。", "img_prompt": "woman drinking coffee in a sunny cozy cafe lifestyle"},
+            {"command": "/poster", "description": "製作海報風格圖像。畫面構圖鮮明，會預留標題與文字的位置，適合活動宣傳、展覽或電影海報。", "img_prompt": "vibrant cinematic movie poster design"},
+            {"command": "/white background", "description": "換成純白背景。去除原本的背景，主體放在乾淨的白底上，常用於電商商品圖、證件照或去背素材。", "img_prompt": "a pair of red sneakers on a pure white background"},
+            {"command": "/removeobject", "description": "移除畫面中不要的物件，例如路人、雜物、電線或浮水印，並自動補齊背景，讓畫面看起來自然。", "img_prompt": "split screen before and after removing tourist from beach photo"},
+            {"command": "/colorize", "description": "為黑白照片上色。依照畫面內容推估合理的色彩，可修復老照片或歷史影像。", "img_prompt": "split screen left black and white old photo right full color photo"},
+            {"command": "/fixlighting", "description": "修正光線問題。改善過暗、過曝、逆光或色溫不均的狀況，讓明暗分布平衡。", "img_prompt": "beautifully lit portrait photo studio lighting"},
+            {"command": "/openeyes", "description": "把照片中閉眼或半閉眼的人物修成自然睜眼，常用於修補團體照或活動合照。", "img_prompt": "group of friends smiling with open eyes"},
+            {"command": "/deblur", "description": "修正模糊照片。改善手震、對焦失準或動態模糊，提升清晰度與細節。", "img_prompt": "ultra sharp focus macro photography of a flower"},
+            {"command": "/fixhair", "description": "修整髮型細節。處理亂翹的髮絲、碎髮或毛躁，讓髮型看起來整齊，也可以讓去背時的髮絲邊緣更自然。", "img_prompt": "portrait of a woman with perfectly styled neat hair"},
+            {"command": "/upscale", "description": "放大解析度。在不失真的前提下把圖片放大 2 到 4 倍並補足細節，適合印刷或大尺寸輸出。", "img_prompt": "high resolution 4k sharp details landscape"},
+            {"command": "/outpaint", "description": "延伸畫面。往上下左右擴展原本的構圖，自動補出合理的背景，可以把直式照片改成橫式。", "img_prompt": "expansive landscape zoomed out"},
+            {"command": "/restore", "description": "修復老照片。處理刮痕、摺痕、褪色和斑點，常和 /colorize 一起使用。", "img_prompt": "restored crisp vintage portrait photography"},
+            {"command": "/changebg", "description": "更換背景。保留主體，把背景換成指定的場景，例如海邊、教室或星空。", "img_prompt": "person standing on a futuristic sci-fi planet background"},
+            {"command": "/smile", "description": "調整表情。讓人物露出自然的微笑，常用於修補合照中表情僵硬的人。", "img_prompt": "person with a bright happy natural smile"},
+            {"command": "/changeoutfit", "description": "更換服裝。保留人物的臉和姿勢，只替換衣著款式或顏色。", "img_prompt": "person wearing a stylish futuristic jacket"},
+            {"command": "/variation", "description": "生成變化版本。以原圖為基礎產出幾張構圖或細節略有不同的版本，方便挑選。", "img_prompt": "4 variations of a cute robot character design"},
+            {"command": "/anime", "description": "轉成日系動漫風格，線條清楚，色彩明亮，人物帶有動畫角色的特徵。", "img_prompt": "anime style illustration of a magical girl in a bright city"},
+            {"command": "/watercolor", "description": "轉成水彩畫風格，色彩暈染、邊緣柔和，適合文藝、溫馨的主題。", "img_prompt": "watercolor painting of a peaceful forest cabin"},
+            {"command": "/sketch", "description": "轉成鉛筆素描或線稿，保留輪廓與明暗，可作為著色底稿或教學示意。", "img_prompt": "pencil sketch drawing of a classic sports car"},
+            {"command": "/cartoon", "description": "轉成卡通插畫風格，造型簡化、比例誇張，較為活潑可愛。", "img_prompt": "colorful cute cartoon style dog playing"},
+            {"command": "/3drender", "description": "轉成 3D 立體渲染風格，有材質、光影與景深，類似動畫電影或公仔質感。", "img_prompt": "3d render of a cute fluffy monster, Pixar style"},
+            {"command": "/pixelart", "description": "轉成像素藝術，呈現復古電玩遊戲的畫面感。", "img_prompt": "16-bit pixel art of a cyberpunk city street"},
+            {"command": "/cinematic", "description": "套用電影感。採寬畫幅構圖、戲劇性光影和電影調色，讓畫面更有故事張力。", "img_prompt": "cinematic shot of a lone hero in the rain, dramatic lighting"},
+            {"command": "/product", "description": "生成商品攝影圖。主體清晰，打光專業，有質感的陳列背景，適合電商和型錄。", "img_prompt": "professional product photography of a perfume bottle"},
+            {"command": "/flatlay", "description": "平拍俯視構圖。物品從正上方整齊排列，常見於文具、美食和開箱照。", "img_prompt": "flatlay photography of a workspace with laptop coffee and notebook"},
+            {"command": "/logo", "description": "設計標誌。造型簡潔、辨識度高，適合社團、活動或品牌使用。", "img_prompt": "minimalist geometric logo design for a tech startup"},
+            {"command": "/icon", "description": "生成圖示。風格統一的小型圖像，可用於簡報、網頁按鈕或 App。", "img_prompt": "flat vector icon of a rocket ship"},
+            {"command": "/sticker", "description": "生成貼圖。主體帶白色外框、背景透明，適合 LINE 貼圖或實體貼紙。", "img_prompt": "die-cut sticker of a cute cat kawaii style white border"},
+            {"command": "/infographic", "description": "生成資訊圖表。把資料或概念用圖示、色塊與版面整理成視覺化圖解。", "img_prompt": "modern infographic layout with charts and graphs"},
+            {"command": "/comic", "description": "轉成多格漫畫，依照劇情分格並加入對話框，適合做故事說明或教材。", "img_prompt": "comic book page with panels and speech bubbles"},
+            {"command": "/storyboard", "description": "產生分鏡腳本，把一段情節拆成連續畫面，可用於影片或簡報的規劃。", "img_prompt": "storyboard sketch sequence of an action scene"},
+            {"command": "/coloringpage", "description": "生成著色畫。只保留黑白線稿、沒有灰階，可以直接印出來讓學生著色。", "img_prompt": "black and white line art coloring page of a mandala"},
+            {"command": "/charactersheet", "description": "生成角色設定圖，同一個角色的正面、側面、背面和表情並排，方便維持角色一致。", "img_prompt": "character design sheet of a fantasy warrior front side back views"},
+            {"command": "/chibi", "description": "轉成 Q 版造型，頭大身小，可愛討喜，適合吉祥物和貼圖。", "img_prompt": "cute chibi anime boy with large eyes"},
+            {"command": "/isometric", "description": "等角視角插圖，以 45 度俯視的立體小場景呈現，常用於地圖、教室配置或流程示意。", "img_prompt": "isometric 3d illustration of a cozy room"},
+            {"command": "/mockup", "description": "產品樣機圖，把設計放到實物上預覽，例如 T 恤、馬克杯、手機或書封。", "img_prompt": "blank t-shirt mockup on a wooden table"},
+            {"command": "/pattern", "description": "生成無縫圖樣，可以上下左右無限拼接，適合做背景、包裝紙或布料花紋。", "img_prompt": "seamless floral pattern design"},
+            {"command": "/vintage", "description": "套用復古風格，加上底片顆粒、泛黃色調和老相機質感。", "img_prompt": "vintage 1970s style photograph with film grain"},
+            {"command": "/cyberpunk", "description": "賽博龐克風格，以霓虹燈、雨夜和高科技城市為特色。", "img_prompt": "cyberpunk city street at night neon lights raining"},
+            {"command": "/claymation", "description": "黏土動畫風格，呈現手捏黏土的材質與指紋痕跡。", "img_prompt": "claymation style cute dinosaur figure"},
+            {"command": "/papercut", "description": "剪紙風格，以多層紙張疊出立體陰影，帶有手作感。", "img_prompt": "layered papercut art illustration of a forest night"},
+            {"command": "/goldenhour", "description": "套用黃金時刻光線，也就是日出或日落時溫暖柔和的斜射光，讓畫面更有氛圍。", "img_prompt": "portrait of a woman at golden hour sunset warm light"},
+            {"command": "/minimalist", "description": "極簡風格，元素少、留白多、配色單純，適合封面與標誌。", "img_prompt": "minimalist abstract art with basic shapes and few colors"},
+            {"command": "/beforeafter", "description": "生成前後對照圖，左右並排呈現改變前後的狀態，例如環境變遷或修圖成果。", "img_prompt": "split screen before and after photo editing"}
+        ];
+    </script>
+    <script src="script.js"></script>
+</body>
+</html>
